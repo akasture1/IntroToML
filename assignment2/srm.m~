@@ -1,0 +1,69 @@
+clear
+close all
+rng('default')
+
+testErrProbs = zeros(100,5);
+updates = zeros(100,1);
+maxUpdates = zeros(100,1);
+
+qMax=5;
+nTestData=1e4;
+nSample=[10,100,10000];
+nTrials=1e3;
+
+
+
+maxPercepIter=10000;
+
+idealFunc=@(x1,x2)[x1.^3 x1.^2 x1 x2];
+idealWeights=[-1 3 -2 1];
+
+trainErrors = zeros(nTrials,qMax,length(nSample));
+erm=zeros(nTrials,qMax,length(nSample));
+srm=zeros(nTrials,qMax,length(nSample));
+
+% values for srm
+sigma=0.05;
+const=0.1;
+
+for k = 1:length(nSample)
+    
+    nSample = nSample(k);
+    
+    for j = 1:nTrials
+        
+        x1Train = 2.5*rand(nSample,1);
+        x2Train = 3*rand(nSample,1)-1;
+        
+        flipMult = randsample([1,-1],nSample,true,[0.9, 0.1])';
+        yTrain = (sign(idealWeights * idealFunc(x1Train,x2Train)').*flipMult)';
+
+        for i=1:qMax
+            fprintf('nDataSet: %d, Trial: %d, Q: %d\n',k,j,i)
+            
+            q = i-1;
+            ZTrain = polyTransform([x1Train x2Train],q);           
+            
+            % Training Error
+            [wOpt, trainErrors(j,i,k)] = perceptronPlus(ZTrain,yTrain,maxIter);
+
+            % Test Error
+            x1Test = 2.5*rand(nTestData,1);
+            x2Test = 3*rand(nTestData,1)-1;
+
+            ZTest = polyTransform([x1Test x2Test],q);
+
+            % determine classes of testing points
+            classes_test=sign(w_percep'*X_test);
+
+            % determine ideal class of test points
+            classes_test_true=sign(idealFunc(x_test(:,1),x_test(:,2))*idealWeights)';
+                              sign(idealWeights * idealFunc(x1Test,x2Test)');
+
+            % determine erm and srm risk
+            erm(j,i,k)=numel(find(classes_test_true~=classes_test))/nTestData;
+            srm(j,i,k)=erm(j,i,k)+complexity_term(nSample,q,sigma,const);
+
+        end
+    end
+end

@@ -1,0 +1,72 @@
+clear
+close all
+rng('default')
+
+testErrProbs = zeros(100,5);
+updates = zeros(100,1);
+maxUpdates = zeros(100,1);
+
+qMax=5;
+nTestData=1e4;
+trainData=[10,100,10000];
+nTrials=1;
+
+
+
+maxPercepIter=10000;
+
+idealFunc=@(x1,x2)[x1.^3 x1.^2 x1 x2];
+idealWeights=[-1 3 -2 1];
+
+growthFunc = @(n,vcDim)(2*n*exp(1)/vcDim)^vcDim;
+omega = @(n,vcDim,del) sqrt(8*log(4*growthFunc(n,vcDim)./del)./n);
+
+trainErrors = zeros(nTrials,qMax,length(trainData));
+erm=zeros(nTrials,qMax,length(trainData));
+srm=zeros(nTrials,qMax,length(trainData));
+
+trainErrors = zeros(qMax,length(trainData));
+erm=zeros(nTrials,qMax,length(trainData));
+srm=zeros(nTrials,qMax,length(trainData));
+
+% values for srm
+del = 0.05; % 95% Confidence Interval
+const=0.1;  % Hueristic modification to the Complexity Term
+
+for k = 1:length(trainData)
+    
+    nTrainData = trainData(k);
+    
+    for j = 1:nTrials
+        
+        x1Train = 2.5*rand(nTrainData,1);
+        x2Train = 3*rand(nTrainData,1)-1;
+        
+        flipMult = randsample([1,-1],nTrainData,true,[0.9, 0.1])';
+        yTrain = (sign(idealFunc(x1Train,x2Train) * idealWeights').*flipMult);
+
+        for i=1:qMax
+            fprintf('nTrainData: %d, Trial: %d, Q: %d\n',nTrainData,j,i)
+            
+            q = i-1;
+            ZTrain = polyTransform([x1Train x2Train],q);           
+            
+            % Training Error
+            [wOpt, trainErrors(j,i,k)] = perceptronPlus(ZTrain,yTrain,maxPercepIter);
+
+            % Test Error
+            x1Test = 2.5*rand(nTestData,1);
+            x2Test = 3*rand(nTestData,1)-1;
+
+            ZTest = polyTransform([x1Test x2Test],q);
+
+            yTest = sign(wOpt'*ZTest)';
+            yTestIdeal = sign(idealFunc(x1Test,x2Test) * idealWeights');
+
+            % determine erm and srm risk
+            erm(j,i,k) = numel(find(yTest~=yTestIdeal))/nTestData;
+            srm(j,i,k) = erm(j,i,k) + const*omega(nTrainData, q+1, del);
+
+        end
+    end
+end
