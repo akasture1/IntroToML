@@ -4,7 +4,7 @@
 
 f = @(t) t.*(t-1).*(t-2);
 
-n = 50;
+n = 10000;
 x1 = 2.5*rand(n,1); 
 x2 = -1 + 3*rand(n,1);
 y = zeros(n,1);
@@ -26,10 +26,10 @@ p2 = plot(x1(classAbove),x2(classAbove), 'x', 'MarkerSize', 15, 'LineWidth', 2);
 p3 = plot(x1(classBelow),x2(classBelow), 'o', 'MarkerSize', 15, 'LineWidth', 2);
 
 % Figure options
-title('Generating Noisy Data','FontSize',46);
+title('Generating Noisy Feature Vectors; N=10000','FontSize',46);
 xlabel('x_{1}','FontSize',36);
 ylabel('x_{2}','FontSize',36);
-%legend([p1 p3],'true separators','perceptron separator','Location','southeast');
+legend([p1 p2 p3],'true classifier','+1','-1','Location','southeast');
 grid on
 grid minor
 set(gca,'fontsize',32);
