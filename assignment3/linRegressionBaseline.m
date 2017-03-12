@@ -2,15 +2,15 @@
 % March 2017
 
 % EE3-23 Machine Learning Assignment 3
-% Q3C - Feature Transformation
+% Q3B - Linear Regression Baseline
 
 clc
 clear 
 close all
 
 %Config
-normConfig = '';
-lambdaConfig = '';
+normConfig = 'zscore';
+lambdaConfig = 'valPerUser';
 
 % Load Train/Test Data (userId, movieId, rating)
 trainData = csvread('./movie-data/ratings-train.csv',1);
@@ -24,15 +24,16 @@ features  = csvread('./movie-data/movie-features.csv',1);
 
 if strcmpi(normConfig, 'normc')
     features(:,2:end) = (normc(features(:,2:end)'))';
-    trainData(:,3) = normc(trainData(:,3));
-    testData(:,3) = normc(testData(:,3));
+    %trainData(:,3) = normc(trainData(:,3));
+    %testData(:,3) = normc(testData(:,3));
 elseif strcmpi(normConfig, 'zscore')
     features(:,2:end) = (zscore(features(:,2:end)'))';   
-    trainData(:,3) = zscore(trainData(:,3));
-    testData(:,3) = zscore(testData(:,3));
+    %trainData(:,3) = zscore(trainData(:,3));
+    %testData(:,3) = zscore(testData(:,3));
 end        
 
 userIds = unique(trainData(:,1));
+weights = zeros(numFeat+1,length(userIds));
 lambdas = zeros(length(userIds),1);
 
 trainError = zeros(length(userIds),1);
@@ -52,8 +53,8 @@ for userId = 1:1:length(userIds)
     % Extract training movie ratings and the corresponding features for current user
     y = currTrainData(:,3);
     Z = features(currTrainData(:,2),:); 
-    Z = x2fx(Z(:,2:end),'quadratic');
-
+    Z(:,1) = 1;
+    
     if strcmpi(lambdaConfig, 'valPerUser')
         lambda = getLambdaPerUser(currTrainData,Z,10);
         lambdas(userId) = lambda;
@@ -61,6 +62,7 @@ for userId = 1:1:length(userIds)
     
     % Obtain weights for current user
     wReg = ridgeRegression(Z,y,lambda);
+    weights(:,userId) = wReg;
     
     % Calculate Training Error
     trainError(userId) = sum((y - Z*wReg).^2);
@@ -68,8 +70,7 @@ for userId = 1:1:length(userIds)
     % Calculate Test Error
     y = currTestData(:,3);
     Z = features(currTestData(:,2),:); 
-    Z = x2fx(Z(:,2:end),'quadratic');
-
+    Z(:,1) = 1;
     testError(userId) = sum((y - Z*wReg).^2);
 end
 
@@ -82,9 +83,9 @@ fprintf('Training Error: %f\nTest Error: %f\n',trainError, testError);
 % Plots
 if strcmpi(lambdaConfig, 'valAllUsers')
     figure
-    plot(lambdas,lambdasValErrors, 'x', 'MarkerSize', 15, 'LineWidth', 2);
+    plot(lambdas,lambdasValErrors, '-', 'MarkerSize', 15, 'LineWidth', 2);
     hold on
-    plot(lambdas,lambdasTrainErrors, 'x', 'MarkerSize', 15, 'LineWidth', 2);
+    plot(lambdas,lambdasTrainErrors, '-', 'MarkerSize', 15, 'LineWidth', 2);
     
     % Figure options
     title('Cross-Validation Results for Different Lambda Values','FontSize',46);
@@ -96,7 +97,15 @@ if strcmpi(lambdaConfig, 'valAllUsers')
     set(gca,'fontsize',32);
 elseif strcmpi(lambdaConfig, 'valPerUser')
     figure
-    h = histogram(lambdas);
-    h.NumBins = 20;
+    pd = fitdist(lambdas,'Rayleigh');
+    x = 0:0.1:max(lambdas);
+    y = pdf(pd,x);
+    plot(x,y, 'LineWidth', 2);
+    title('Probability Distribution for Per-User Lambda Values','FontSize',46);
+    xlabel('Lambda','FontSize',36);
+    ylabel('Probability','FontSize',36);
+    grid on
+    grid minor
+    set(gca,'fontsize',32);
 end
 

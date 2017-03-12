@@ -61,5 +61,5 @@ testMseM = testMseM/testNum;
 
 % Print Results to Console
 fprintf('Movie Rating Prediction (User-Independent)\n');
-fprintf('Training Error: %f\nTest Error: %f\n',trainMseM, testMseM);
+fprintf('Training Error: %3.6f\nTest Error: %3.6f\n',trainMseM, testMseM);
 

@@ -8,11 +8,11 @@ clear
 close all
 
 %% Stochastic Gradient Descent (SGD) Setup
-gamma = 0.1;
+gamma = 0.01;
 
 % Max Epochs
 epoch = 1;
-maxEpochs = 50;
+maxEpochs = 100;
 
 % Load Train/Test Data (userId, movieId, rating)
 trainData = csvread('./movie-data/ratings-train.csv',1);
@@ -29,25 +29,26 @@ nextMovieFeat = @(r, u, v, gamma, lambda) v + gamma*(getError(r,u,v)*u - lambda*
 
 %% Validation Setup
 % Model Set
-lambdas = 0.9:0.1:1.4;
-Ks = 10:1:15;
+lambdas = [0.0001 0.001 0.01 0.1 1];
+Ks = [1 5 10 15];
 
 % Validation Error Vector (per model)
-valErrors = zeros(length(Ks),length(lambdas));
+valErrors3D = zeros(length(Ks),length(lambdas), maxEpochs);
 
 % K-Fold Cross Validation Indices
 indices = crossvalind('Kfold', length(trainData), 10);
 
 
 %% Validate best {lambda,K} pair
-fprintf('=-=-=-=-=-=-=-=---Starting Validation---=-=-=-=-=-=-=-=\n\n')
+fprintf('=-=-=-=-=-=-=-=---Starting Validation---=-=-=-=-=-=-=-=\n')
 % For each {lambda,K} pair
 for i = 1:1:length(lambdas)
     lambda = lambdas(i);
     for k = 1:1:length(Ks)
         K = Ks(k);
-        fprintf('---------------[lambda=%f] [K=%d]---------------',lambda,K);
+        fprintf('\n---------------[lambda=%f] [K=%d]---------------',lambda,K);
         % For each Train-Validiation Data Configuration
+        bestValErrors = realmax*ones(maxEpochs,1);
         for valIndex = 1:1:max(indices)
             
             valDataSegment = trainData(indices==valIndex,:);        
@@ -64,7 +65,7 @@ for i = 1:1:length(lambdas)
             movieFeatures = rand(numMovies, K);
             
             epoch = 1;
-            bestValError = realmax;
+            valErrors = zeros(maxEpochs,1);
             fprintf('\n[valIndex=%d]; epoch:',valIndex);
             while epoch <= maxEpochs
                 fprintf('%d',epoch);
@@ -78,7 +79,6 @@ for i = 1:1:length(lambdas)
                     movieFeatures(trainEntry(2),:) = nextMovieFeat(r, u, v, gamma, lambda);
                 end    
         
-                valError = 0;
                 for user = 1:1:length(trainUserIds)
                     currTrainData = trainDataSegment(trainDataSegment(:,1)==user,:);
                     currValData = valDataSegment(valDataSegment(:,1)==user,:);
@@ -87,22 +87,31 @@ for i = 1:1:length(lambdas)
                     % Calculate Validation Error
                     R = currValData(:,3);
                     V = movieFeatures(currValData(:,2),:); 
-                    valError = valError + sum((R - V*U').^2);
+                    valErrors(epoch) = valErrors(epoch) + sum((R - V*U').^2);
                 end
-                valError = (1/numValEntries)*valError;
-                if valError < bestValError
-                    bestValError = valError;
+                valErrors(epoch) = (1/numValEntries)*valErrors(epoch);
+                if valErrors(epoch) < bestValErrors(epoch) 
+                    bestValErrors(epoch) = valErrors(epoch);
                 end
                 epoch = epoch + 1;
             end % epochs
-            valErrors(k,i) = valErrors(k,i) + bestValError;
         end % train-validation config
-        valErrors(k,i) = (1/max(indices)) * valErrors(k,i);
-        fprintf('\n---------------[lambda=%f] [K=%d] Validation Error=%f\n\n',lambda,K,valErrors(k,i));
+        valErrors3D(k,i,:) = bestValErrors;
     end %K
 end %lambda
 
+figure
+M = squeeze(valErrors3D(1,:,:))'; p1 = plot(M(:,1:end-1), 'r', 'LineWidth', 2); %legend('K = 1');
+hold on
+M = squeeze(valErrors3D(2,:,:))'; p2 = plot(M(:,1:end-1), 'g', 'LineWidth', 2); %legend('K = 5');
+M = squeeze(valErrors3D(3,:,:))'; p3 = plot(M(:,1:end-1), 'b', 'LineWidth', 2); %legend('K = 10');
+M = squeeze(valErrors3D(4,:,:))'; p4 = plot(M(:,1:end-1), 'y', 'LineWidth', 2); %legend('K = 15');
+legend([p1(1) p2(1) p3(1) p4(1)], {'K=1','K=5','K=10','K=15'});
+title('Cross-Validation Error for each {Lambda, K} Configuration','FontSize',46);
+xlabel('Epochs','FontSize',36);
+ylabel('Error','FontSize',36);
+grid on
+grid minor
+set(gca,'fontsize',32);
+
 %% DONE!
-
-
-

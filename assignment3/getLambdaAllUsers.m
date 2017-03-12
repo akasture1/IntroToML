@@ -5,7 +5,7 @@ function [minIndex, lambdas, valErrors, trainErrors] = getLambdaAllUsers(trainDa
 [N,~] = size(trainData);
 
 % Model Set
-lambdas = 0.1:0.1:5;
+lambdas = linspace(0.01, 2, 100);
 
 % K-Fold Cross Validation Indices
 indices = crossvalind('Kfold', N, K);
@@ -52,6 +52,5 @@ for i = 1:1:length(lambdas)
 end
 
 [~,minIndex] = min(valErrors);
-lambda = lambdas(minIndex);
-
+%lambda = lambdas(minIndex);
 end

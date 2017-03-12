@@ -2,14 +2,14 @@
 % March 2017
 
 % EE3-23 Machine Learning Assignment 3
-% Q3B - Linear Regression Baseline
+% Q3C - Feature Transformation
 
 clc
 clear 
 close all
 
 %Config
-normConfig = '';
+normConfig = 'zscore';
 lambdaConfig = 'valAllUsers';
 
 % Load Train/Test Data (userId, movieId, rating)
@@ -24,16 +24,15 @@ features  = csvread('./movie-data/movie-features.csv',1);
 
 if strcmpi(normConfig, 'normc')
     features(:,2:end) = (normc(features(:,2:end)'))';
-    trainData(:,3) = normc(trainData(:,3));
-    testData(:,3) = normc(testData(:,3));
+    %trainData(:,3) = normc(trainData(:,3));
+    %testData(:,3) = normc(testData(:,3));
 elseif strcmpi(normConfig, 'zscore')
     features(:,2:end) = (zscore(features(:,2:end)'))';   
-    trainData(:,3) = zscore(trainData(:,3));
-    testData(:,3) = zscore(testData(:,3));
+    %trainData(:,3) = zscore(trainData(:,3));
+    %testData(:,3) = zscore(testData(:,3));
 end        
 
 userIds = unique(trainData(:,1));
-weights = zeros(numFeat+1,length(userIds));
 lambdas = zeros(length(userIds),1);
 
 trainError = zeros(length(userIds),1);
@@ -53,8 +52,8 @@ for userId = 1:1:length(userIds)
     % Extract training movie ratings and the corresponding features for current user
     y = currTrainData(:,3);
     Z = features(currTrainData(:,2),:); 
-    Z(:,1) = 1;
-    
+    Z = x2fx(Z(:,2:end),'quadratic');
+
     if strcmpi(lambdaConfig, 'valPerUser')
         lambda = getLambdaPerUser(currTrainData,Z,10);
         lambdas(userId) = lambda;
@@ -62,7 +61,6 @@ for userId = 1:1:length(userIds)
     
     % Obtain weights for current user
     wReg = ridgeRegression(Z,y,lambda);
-    weights(:,userId) = wReg;
     
     % Calculate Training Error
     trainError(userId) = sum((y - Z*wReg).^2);
@@ -70,7 +68,8 @@ for userId = 1:1:length(userIds)
     % Calculate Test Error
     y = currTestData(:,3);
     Z = features(currTestData(:,2),:); 
-    Z(:,1) = 1;
+    Z = x2fx(Z(:,2:end),'quadratic');
+
     testError(userId) = sum((y - Z*wReg).^2);
 end
 

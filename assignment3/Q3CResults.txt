@@ -1,0 +1,27 @@
+Q3C Results
+
+-------------------------------
+Run #1
+normConfig = '';
+lambdaConfig = 'valAllUsers';
+
+Training Error: 0.556823
+Test Error: 1.038890
+lambda: 1.3568
+
+Run #2
+normConfig = 'normc';
+lambdaConfig = 'valAllUsers';
+
+Training Error: 0.666486
+Test Error: 0.911428
+lambda: 1.4372
+
+Run #3
+normConfig = ‘zscore’;
+lambdaConfig = 'valAllUsers';
+Training Error: 0.467228
+Test Error: 1.589808
+lambda: 0.3517
+
+

@@ -5,7 +5,7 @@ function [lambda] = getLambdaPerUser(currTrainData, Z, K)
 [N,~] = size(currTrainData);
 
 % Model Set
-lambdas = 0.1:0.1:5;
+lambdas = linspace(0.01, 5, 100);
 
 % K-Fold Cross Validation Indices
 indices = crossvalind('Kfold', N, K);

@@ -1,0 +1,46 @@
+Q3B Results
+
+-------------------------------
+Run #1
+normConfig = '';
+lambdaConfig = 'valAllUsers';
+
+Training Error: 0.742776
+Test Error: 0.936477
+lambda: 1.3769
+
+Run #2
+normConfig = 'normc';
+lambdaConfig = 'valAllUsers';
+
+Training Error: 0.755268
+Test Error: 0.896776
+lambda: 1.4372
+
+Run #3
+normConfig = ‘zscore’;
+lambdaConfig = 'valAllUsers';
+Training Error: 0.712409
+Test Error: 1.077042
+lambda: 0.3919
+-------------------------------
+Run #4
+normConfig = '';
+lambdaConfig = 'valPerUser';
+
+Training Error: 0.742756
+Test Error: 0.946441
+
+
+Run #5
+normConfig = 'normc';
+lambdaConfig = 'valPerUser';
+
+Training Error: 0.751678
+Test Error: 0.905369
+
+Run #6
+normConfig = ‘zscore’;
+lambdaConfig = 'valPerUser';
+Training Error: 0.719734
+Test Error: 1.066379

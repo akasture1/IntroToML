@@ -12,10 +12,10 @@ close all
 K = 15;
 
 % Regulariser Constant
-lambda = 0.1;
+lambda = 0.001;
 
 % Stochastic Gradient Descent (SGD) Step Size
-gamma = 0.1;
+gamma = 0.01;
 
 % Max Epochs
 epoch = 1;
@@ -88,14 +88,14 @@ end
 
 % Plot Error Results
 figure
-plot(1:1:maxEpochs,trainErrors, 'x', 'MarkerSize', 15, 'LineWidth', 2);
+plot(1:1:maxEpochs,trainErrors, '-', 'MarkerSize', 15, 'LineWidth', 2);
 hold on
-plot(1:1:maxEpochs,testErrors, 'x', 'MarkerSize', 15, 'LineWidth', 2);
+plot(1:1:maxEpochs,testErrors, '-', 'MarkerSize', 15, 'LineWidth', 2);
 
 % Figure options
-title('Training vs Test Error','FontSize',46);
+title('Collaborative Filtering: Training vs Test Error','FontSize',46);
 xlabel('Epochs','FontSize',36);
-ylabel('Errors','FontSize',36);
+ylabel('Error','FontSize',36);
 legend('Training Error','Test Error','Location','southeast');
 grid on
 grid minor
