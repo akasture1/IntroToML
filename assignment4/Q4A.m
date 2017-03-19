@@ -7,7 +7,6 @@ close all
 rng(1)
 
 %% Extract Training and Test Data for Digits 2 and 8
-
 % Raw Training Data
 X = importdata('./data/zip.train');
 X = X(X(:,1)==2 | X(:,1)==8 ,:);
@@ -56,4 +55,17 @@ plot(cvErrs)
 hold on
 plot(testErrUBs)
 plot(testErrs)
+
 %% Method 2
+svmModel = fitcsvm(X,y,'Standardize',true,'KernelFunction','rbf','BoxConstraint', Inf,...
+                  'OptimizeHyperparameters',{'KernelScale'},...
+                  'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
+                  'expected-improvement-plus'));
+
+cvSvmModel = crossval(svmModel);
+cvErr = kfoldLoss(cvSvmModel);
+[numSV,~] = size(svmModel.SupportVectors);
+testErrUB = numSV/(n+1);
+
+labels = predict(svmModel,R);
+testErr = numel(find(labels.*s<0))/m;
