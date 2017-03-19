@@ -4,9 +4,7 @@
 
 clear
 close all
-
 rng(1)
-gamma = 1e3;
 
 %% Extract Training and Test Data for Digits 2 and 8
 
@@ -43,14 +41,14 @@ testErrUBs = zeros(g,1);
 testErrs = zeros(g,1);
 for j = 1:g
     gamma = gammas(j);
-    svm = fitcsvm(X,y,'Standardize',true, 'KernelFunction','rbf', 'KernelScale', gamma, 'BoxConstraint', Inf);
-    cvSvm = crossval(svm);
+    svmModel = fitcsvm(X,y,'Standardize',true, 'KernelFunction','rbf', 'KernelScale', gamma, 'BoxConstraint', Inf);
+    cvSvmModel = crossval(svmModel);
     
-    cvErrs(j) = kfoldLoss(cvSvm);
-    [numSV,~] = size(svm.SupportVectors);
+    cvErrs(j) = kfoldLoss(cvSvmModel);
+    [numSV,~] = size(svmModel.SupportVectors);
     testErrUBs(j) = numSV/(n+1);
     
-    labels = predict(svm,R);
+    labels = predict(svmModel,R);
     testErrs(j) = numel(find(labels.*s<0))/m;
 end
 
