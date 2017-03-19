@@ -1,11 +1,12 @@
 % ak7213@ic.ac.uk
 % Assignment 4 - Question 4(a) 
 % Large Margin SVM with Gaussian RBF on raw Handwritten Data
-
+clc
 clear
 close all
-rng(1)
 
+rng(1)
+normalise = true;
 %% Extract Training and Test Data for Digits 2 and 8
 % Raw Training Data
 X = importdata('./data/zip.train');
@@ -32,40 +33,88 @@ R = R(:,2:end);
 
 [m,d2] = size(R);
 
+%% Perceptron Results
+maxIter = 1e5;
+wOpt = perceptron(X', y, maxIter);
+errChecks = s' .* (wOpt' * [ones(1,m);R']);
+percepTestErr = sum(errChecks < 0)/m;
+fprintf('Perceptron Test Error: %3.6f\n', percepTestErr);
+
+
 %% Method 1
 gammas = 10.^(-5:5);
-g = length(gammas);
-cvErrs = zeros(g,1);
-testErrUBs = zeros(g,1);
-testErrs = zeros(g,1);
-for j = 1:g
+%gammas = 1:1:100;
+
+cvErrs = zeros(length(gammas),1);
+estTestErr = zeros(length(gammas),1);
+trueTestErrs = zeros(length(gammas),1);
+
+for j = 1:length(gammas)
     gamma = gammas(j);
-    svmModel = fitcsvm(X,y,'Standardize',true, 'KernelFunction','rbf', 'KernelScale', gamma, 'BoxConstraint', Inf);
-    cvSvmModel = crossval(svmModel);
+    svmObj = fitcsvm(X,y,'Standardize',normalise, 'KernelFunction','rbf', 'KernelScale', gamma, 'BoxConstraint', Inf);
+    cvObj = crossval(svmObj);
     
-    cvErrs(j) = kfoldLoss(cvSvmModel);
-    [numSV,~] = size(svmModel.SupportVectors);
-    testErrUBs(j) = numSV/(n+1);
+    cvErrs(j) = kfoldLoss(cvObj);
+    [numSV,~] = size(svmObj.SupportVectors);
+    estTestErr(j) = numSV/(n+1);
     
-    labels = predict(svmModel,R);
-    testErrs(j) = numel(find(labels.*s<0))/m;
+    labels = predict(svmObj,R);
+    trueTestErrs(j) = sum(labels.*s<0)/m;
 end
 
-plot(cvErrs)
+% cvErrs, trueTestErrs vs KernelScale
+figure
+semilogx(gammas,cvErrs,'Linewidth', 2);
 hold on
-plot(testErrUBs)
-plot(testErrs)
+semilogx(gammas,trueTestErrs,'Linewidth', 2);
+
+title('Cross-Validation Error vs True Test Error for different KernelScale values','FontSize',46);
+xlabel('KernelScale','FontSize',36);
+ylabel('Error','FontSize',36);
+legend('Cross-Validation Error','True Test Error');
+grid on
+grid minor
+set(gca,'fontsize',32);
+
+% estTestErrs, trueTestErrs vs KernelScale
+figure
+semilogx(gammas,estTestErr,'Linewidth', 2);
+hold on
+semilogx(gammas,trueTestErrs,'Linewidth', 2);
+
+title('Test Error Upper-Bound Est. vs True Test Error for different KernelScale values','FontSize',46);
+xlabel('KernelScale','FontSize',36);
+ylabel('Error','FontSize',36);
+legend('Test Error Upper-Bound Est.','True Test Error');
+grid on
+grid minor
+set(gca,'fontsize',32);
+
+% Print Results To Console
+fprintf('Standardization: %d\n\n',normalise);
+
+[cvErrsMin, cvErrsMinIndex] = min(cvErrs);
+fprintf('-------------------METHOD #1-------------------\n');
+fprintf('Min Cross-Validation Error: %3.6f\n',cvErrsMin);
+fprintf('Best KernelScale: %3.6f\n',gammas(cvErrsMinIndex));
+fprintf('True Test-Error: %3.6f\n',trueTestErrs(cvErrsMinIndex));
 
 %% Method 2
-svmModel = fitcsvm(X,y,'Standardize',true,'KernelFunction','rbf','BoxConstraint', Inf,...
-                  'OptimizeHyperparameters',{'KernelScale'},...
-                  'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
-                  'expected-improvement-plus'));
+svmObj = fitcsvm(X,y,'Standardize',normalise,'KernelFunction','rbf','BoxConstraint', Inf,...
+                     'OptimizeHyperparameters',{'KernelScale'},...
+                     'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
+                     'expected-improvement-plus'));
+cvObj = crossval(svmObj);
 
-cvSvmModel = crossval(svmModel);
-cvErr = kfoldLoss(cvSvmModel);
-[numSV,~] = size(svmModel.SupportVectors);
-testErrUB = numSV/(n+1);
+cvErr = kfoldLoss(cvObj);
+[numSV,~] = size(svmObj.SupportVectors);
+estTestErr = numSV/(n+1);
 
-labels = predict(svmModel,R);
-testErr = numel(find(labels.*s<0))/m;
+labels = predict(svmObj,R);
+trueTestErr = sum(labels.*s<0)/m;
+
+fprintf('-------------------METHOD #2-------------------\n');
+fprintf('Cross-Validation Error: %3.6f\n',cvErr);
+fprintf('Optimal KernelScale: %3.6f\n',svmObj.ModelParameters.KernelScale);
+fprintf('True Test-Error: %3.6f\n',trueTestErr);
+
