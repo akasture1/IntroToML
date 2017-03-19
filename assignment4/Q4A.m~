@@ -56,12 +56,11 @@ for j = 1:length(gammas)
     % Obtain Cross-Validation Error
     cvObj = crossval(svmObj);
     cvErrs(j) = kfoldLoss(cvObj);
-    
-    % Obtain an Est. for the Test Error using #Support Vectors
+
+% Obtain an Est. for the Test Error using #Support Vectors
     [numSV,~] = size(svmObj.SupportVectors);
     estTestErrs(j) = numSV/(n+1);
     
-    % Obtain (true) Test Error
     labels = predict(svmObj,R);
     trueTestErrs(j) = sum(labels.*s<0)/m;
 end
@@ -103,22 +102,17 @@ fprintf('Min Cross-Validation Error: %3.6f\n',cvErrsMin);
 fprintf('Best KernelScale: %3.6f\n',gammas(cvErrsMinIndex));
 fprintf('True Test-Error: %3.6f\n',trueTestErrs(cvErrsMinIndex));
 
-%% Method 2: Use OptimizeHyperparameters option to select best KernelScale value
-% Optimise SVM parameters
+%% Method 2
 svmObj = fitcsvm(X,y,'Standardize',normalise,'KernelFunction','rbf','BoxConstraint', Inf,...
                      'OptimizeHyperparameters',{'KernelScale'},...
                      'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
                      'expected-improvement-plus'));
-
-% Obtain Cross-Validation Error
 cvObj = crossval(svmObj);
-cvErr = kfoldLoss(cvObj);
 
-% Obtain an Est. for the Test Error using #Support Vectors
+cvErr = kfoldLoss(cvObj);
 [numSV,~] = size(svmObj.SupportVectors);
 estTestErr = numSV/(n+1);
 
-% Obtain (true) Test Error
 labels = predict(svmObj,R);
 trueTestErr = sum(labels.*s<0)/m;
 

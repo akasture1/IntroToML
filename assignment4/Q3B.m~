@@ -1,0 +1,56 @@
+% ak7213@ic.ac.uk
+% Assignment 4 - Question 4(b) 
+% Soft Margin SVM with Gaussian RBF on raw Handwritten Data
+% Determining Optimal PCA dimension 
+
+clc
+clear
+close all
+
+rng(1)
+normalise = true;
+
+
+%% Extract Training and Test Data for Digits 2 and 8
+loadData;
+
+%% Construct PCA Coefficient Matrix
+XCoeffs = pca(X);
+RCoeffs = pca(R);
+
+%% Compute!
+
+% Error Vectors
+cvErrs = zeros(d,1);
+estTestErr = zeros(d,1);
+trainErrs = zeros(d,1);
+trueTestErrs = zeros(d,1);
+
+% Track KernelScale and BoxConstraint variables
+kernelScales = zeros(d,1);
+boxConstraints = zeros(d,1);
+
+for k = d-:1:d
+    XBar = X*XCoeffs(:,1:k);
+    RBar = R*RCoeffs(:,1:k);
+    
+    svmObj = fitcsvm(XBar,y,'Standardize',normalise,'KernelFunction','rbf',...
+                            'OptimizeHyperparameters','auto',...
+                            'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
+                            'expected-improvement-plus'));
+    
+    kernelScales(k) = svmObj.ModelParameters.KernelScale;
+    boxConstraints(k) = svmObj.ModelParameters.BoxConstraint;
+
+    cvObj = crossval(svmObj);
+    
+    cvErrs(k) = kfoldLoss(cvObj);
+    [numSV,~] = size(svmObj.SupportVectors);
+    estTestErr(k) = numSV/(n+1);
+    
+    labels = predict(svmObj,XBar);
+    trainErrs(k) = sum(labels.*y<0)/n;
+
+    labels = predict(svmObj,RBar);
+    trueTestErrs(k) = sum(labels.*s<0)/m;
+end
