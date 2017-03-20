@@ -36,8 +36,7 @@ R = R(:,2:end);
 [m,~] = size(R);
 
 %% Construct PCA Coefficient Matrix
-XCoeffs = pca(X);
-RCoeffs = pca(R);
+coeffs = pca(X);
 
 %% Train SVM and measure performance
 % Error Vectors
@@ -53,8 +52,8 @@ boxConstraints = zeros(d,1);
 % Finding best k-Dimension PCA implementation
 for k = 1:1:d
     % Reduce Dimension
-    XBar = X*XCoeffs(:,1:k);
-    RBar = R*RCoeffs(:,1:k);
+    XBar = X*coeffs(:,1:k);
+    RBar = R*coeffs(:,1:k);
 
     % Optimise SVM parameters
     svmObj = fitcsvm(XBar,y,'Standardize',normalise,'KernelFunction','rbf',...

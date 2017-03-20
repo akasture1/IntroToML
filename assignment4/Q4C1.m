@@ -33,12 +33,11 @@ R = R(:,2:end);
 [m,~] = size(R);
 
 %% Construct PCA Coefficient Matrices
-XCoeffs = pca(X);
-RCoeffs = pca(R);
+coeffs = pca(X);
 
 %% Train SVM and measure performance
-XBar = X*XCoeffs(:,1:2);
-RBar = R*RCoeffs(:,1:2);
+XBar = X*coeffs(:,1:2);
+RBar = R*coeffs(:,1:2);
 
 % Optimise SVM parameters
 svmObj = fitcsvm(XBar,y,'Standardize',normalise,'KernelFunction','rbf',...
@@ -76,7 +75,7 @@ xGrid = [x1Grid(:), x2Grid(:)];
 plot(XBar((y==-1),1), XBar((y==-1),2), 'x', 'MarkerSize', 6, 'LineWidth', 1.2);
 hold on
 plot(XBar((y==1),1), XBar((y==1),2), 'o', 'MarkerSize', 6, 'LineWidth', 1.2);
-plot(X(svmObj.IsSupportVector,1),X(svmObj.IsSupportVector,2),'ko','MarkerSize',7,'LineWidth', 2)
+plot(XBar(svmObj.IsSupportVector,1),XBar(svmObj.IsSupportVector,2),'ko','MarkerSize',7,'LineWidth', 2)
 contour(x1Grid,x2Grid, reshape(scores(:,2), size(x1Grid)), [0,0], 'LineWidth', 2);
 
 title('Handwritten Digit Classification: 2-Dimensional PCA Approximation','FontSize',46);
