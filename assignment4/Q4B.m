@@ -86,7 +86,6 @@ parfor k = 1:1:d
     labels = predict(svmObj,RBar);
     trueTestErrs(k) = sum(labels.*s<0)/m;
     
-    fprintf('%d',k);
 end
 
 % Plot Figures
