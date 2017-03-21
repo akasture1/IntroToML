@@ -88,3 +88,29 @@ parfor k = 1:1:d
     
     fprintf('%d',k);
 end
+
+% Plot Figures
+figure
+k = 1:1:d;
+plot(k,trainErrs,'Linewidth', 2);
+hold on
+plot(k,cvErrs,'Linewidth', 2);
+plot(k,trueTestErrs,'Linewidth', 2);
+
+title('Training, Cross-Validation and Test Errors vs k-Dimension PCA Approximation','FontSize',46);
+xlabel('k-Dimension PCA Approximation','FontSize',36);
+ylabel('Error','FontSize',36);
+legend('Training Error', 'Cross-Validation Error', 'Test Error');
+grid on
+grid minor
+axis tight
+set(gca,'fontsize',32);
+
+% Print Results To Console
+fprintf('Standardization: %d\n\n',standardize);
+
+[bestCvErr, bestCvK] = min(cvErrs);
+[bestTestErr, bestTestK] = min(trueTestErrs);
+fprintf('Best Cross-Validation Error: %3.6f --> Dimension: %d --> Test Error: %3.6f\n',bestCvErr, bestCvK, trueTestErrs(bestCvK));
+fprintf('Best Test Error: %3.6f --> Dimension: %d\n',bestTestErr, bestTestK);
+

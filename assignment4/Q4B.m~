@@ -8,7 +8,9 @@ clear
 close all
 
 rng(1)
-normalise = true;
+standardize = true;
+showPlots = false;
+logLevel = 0;
 
 %% Extract Training and Test Data for Digits 2 and 8
 % Raw Training Data
@@ -49,25 +51,21 @@ trueTestErrs = zeros(d,1);
 kernelScales = zeros(d,1);
 boxConstraints = zeros(d,1);
 
+optOptions = struct('AcquisitionFunctionName','expected-improvement-plus','Kfold', 10,...
+                    'ShowPlots', showPlots, 'Verbose', logLevel);
+                
 % Finding best k-Dimension PCA implementation
+fprintf('completed iteration:\n');
 parfor k = 1:1:d
     % Reduce Dimension
     XBar = X*coeffs(:,1:k);
     RBar = R*coeffs(:,1:k);
 
-    % Optimise SVM parameters
-    svmObj = fitcsvm(XBar,y,'Standardize',normalise,'KernelFunction','rbf',...
-                            'OptimizeHyperparameters','auto',...
-                            'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
-                            'expected-improvement-plus'));
-                        
-    optOptions = struct('AcquisitionFunctionName','expected-improvement-plus','Kfold', 10,...
-                        'ShowPlots', showPlots, 'Verbose', logLevel);
-                
-    svmObj = fitcsvm(X,y,'Standardize',standardize,'CacheSize', 'maximal',...
-                         'KernelFunction','rbf','BoxConstraint', Inf,...
-                         'OptimizeHyperparameters',{'KernelScale'},...
-                         'HyperparameterOptimizationOptions', optOptions);
+    % Optimise SVM parameters               
+    svmObj = fitcsvm(XBar,y,'Standardize',standardize,'CacheSize', 'maximal',...
+                            'KernelFunction','rbf',...
+                            'OptimizeHyperparameters', 'auto',...
+                            'HyperparameterOptimizationOptions', optOptions);
     
     kernelScales(k) = svmObj.ModelParameters.KernelScale;
     boxConstraints(k) = svmObj.ModelParameters.BoxConstraint;
@@ -87,4 +85,31 @@ parfor k = 1:1:d
     % Obtain (true) Test Error
     labels = predict(svmObj,RBar);
     trueTestErrs(k) = sum(labels.*s<0)/m;
+    
+    fprintf('%d',k);
 end
+
+% Plot Figures
+figure
+plot(k,trainErrs,'Linewidth', 2);
+hold on
+plot(k,cvErrs,'Linewidth', 2);
+plot(k,trueTestErrs,'Linewidth', 2);
+
+title('Training/Cross-Validat','FontSize',46);
+xlabel('KernelScale','FontSize',36);
+ylabel('Error','FontSize',36);
+legend('Test Error Upper-Bound Est.','True Test Error');
+grid on
+grid minor
+set(gca,'fontsize',32);
+
+% Print Results To Console
+fprintf('Standardization: %d\n\n',standardize);
+
+[cvErrsMin, cvErrsMinIndex] = min(cvErrs);
+fprintf('-------------------METHOD #1-------------------\n');
+fprintf('Min Cross-Validation Error: %3.6f\n',cvErrsMin);
+fprintf('Best KernelScale: %3.6f\n',gammas(cvErrsMinIndex));
+fprintf('True Test-Error: %3.6f\n',trueTestErrs(cvErrsMinIndex));
+
