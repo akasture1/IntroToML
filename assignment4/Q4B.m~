@@ -8,9 +8,7 @@ clear
 close all
 
 rng(1)
-standardize = true;
-showPlots = false;
-logLevel = 0;
+normalise = true;
 
 %% Extract Training and Test Data for Digits 2 and 8
 % Raw Training Data
@@ -51,19 +49,24 @@ trueTestErrs = zeros(d,1);
 kernelScales = zeros(d,1);
 boxConstraints = zeros(d,1);
 
-optOptions = struct('AcquisitionFunctionName','expected-improvement-plus','Kfold', 10,...
-                    'ShowPlots', showPlots, 'Verbose', logLevel);
-                
 % Finding best k-Dimension PCA implementation
 parfor k = 1:1:d
     % Reduce Dimension
     XBar = X*coeffs(:,1:k);
     RBar = R*coeffs(:,1:k);
 
-    % Optimise SVM parameters               
+    % Optimise SVM parameters
+    svmObj = fitcsvm(XBar,y,'Standardize',normalise,'KernelFunction','rbf',...
+                            'OptimizeHyperparameters','auto',...
+                            'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
+                            'expected-improvement-plus'));
+                        
+    optOptions = struct('AcquisitionFunctionName','expected-improvement-plus','Kfold', 10,...
+                        'ShowPlots', showPlots, 'Verbose', logLevel);
+                
     svmObj = fitcsvm(X,y,'Standardize',standardize,'CacheSize', 'maximal',...
-                         'KernelFunction','rbf',...
-                         'OptimizeHyperparameters', 'auto',...
+                         'KernelFunction','rbf','BoxConstraint', Inf,...
+                         'OptimizeHyperparameters',{'KernelScale'},...
                          'HyperparameterOptimizationOptions', optOptions);
     
     kernelScales(k) = svmObj.ModelParameters.KernelScale;

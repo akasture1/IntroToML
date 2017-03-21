@@ -7,7 +7,9 @@ clear
 close all
 
 rng(1)
-normalise = true;
+standardize = true;
+showPlots = true;
+logLevel = 1;
 
 %% Extract Training and Test Data for Digits 1 and 0,2,...,9
 % Feature Training Data
@@ -33,11 +35,14 @@ R = R(:,2:end);
 [m,~] = size(R);
 
 %% Train SVM and measure performance
-% Optimise SVM parameters
-svmObj = fitcsvm(X,y,'Standardize',normalise,'KernelFunction','rbf',...
-                     'OptimizeHyperparameters','auto',...
-                     'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
-                     'expected-improvement-plus'));
+
+optOptions = struct('AcquisitionFunctionName','expected-improvement-plus','Kfold', 10,...
+                    'ShowPlots', showPlots, 'Verbose', logLevel);
+% Optimise SVM parameters               
+svmObj = fitcsvm(X,y,'Standardize',standardize,'CacheSize', 'maximal',...
+                     'KernelFunction','rbf',...
+                     'OptimizeHyperparameters', 'auto',...
+                     'HyperparameterOptimizationOptions', optOptions);
 
 % Record optimal SVM parameters
 kernelScale = svmObj.ModelParameters.KernelScale;

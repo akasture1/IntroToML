@@ -7,8 +7,9 @@ clear
 close all
 
 rng(1)
-normalise = true;
-
+standardize = true;
+showPlots = true;
+logLevel = 1;
 %% Extract Training and Test Data for Digits 2 and 8
 % Raw Training Data
 X = importdata('./data/zip.train');
@@ -49,9 +50,10 @@ cvErrs = zeros(length(gammas),1);
 estTestErrs = zeros(length(gammas),1);
 trueTestErrs = zeros(length(gammas),1);
 
+h = waitbar(0,'Please Wait...');
 for j = 1:length(gammas)
     gamma = gammas(j);
-    svmObj = fitcsvm(X,y,'Standardize',normalise, 'KernelFunction','rbf', 'KernelScale', gamma, 'BoxConstraint', Inf);
+    svmObj = fitcsvm(X,y,'Standardize',standardize, 'KernelFunction','rbf', 'KernelScale', 1/sqrt(gamma), 'BoxConstraint', Inf);
     
     % Obtain Cross-Validation Error
     cvObj = crossval(svmObj);
@@ -64,8 +66,9 @@ for j = 1:length(gammas)
     % Obtain (true) Test Error
     labels = predict(svmObj,R);
     trueTestErrs(j) = sum(labels.*s<0)/m;
+    waitbar(j/length(gammas));
 end
-
+close(h);
 % cvErrs, trueTestErrs vs KernelScale
 figure
 semilogx(gammas,cvErrs,'Linewidth', 2);
@@ -95,7 +98,7 @@ grid minor
 set(gca,'fontsize',32);
 
 % Print Results To Console
-fprintf('Standardization: %d\n\n',normalise);
+fprintf('Standardization: %d\n\n',standardize);
 
 [cvErrsMin, cvErrsMinIndex] = min(cvErrs);
 fprintf('-------------------METHOD #1-------------------\n');
@@ -105,10 +108,13 @@ fprintf('True Test-Error: %3.6f\n',trueTestErrs(cvErrsMinIndex));
 
 %% Method 2: Use OptimizeHyperparameters option to select best KernelScale value
 % Optimise SVM parameters
-svmObj = fitcsvm(X,y,'Standardize',normalise,'KernelFunction','rbf','BoxConstraint', Inf,...
+optOptions = struct('AcquisitionFunctionName','expected-improvement-plus','Kfold', 10,...
+                    'ShowPlots', showPlots, 'Verbose', logLevel);
+                
+svmObj = fitcsvm(X,y,'Standardize',standardize,'CacheSize', 'maximal',...
+                     'KernelFunction','rbf','BoxConstraint', Inf,...
                      'OptimizeHyperparameters',{'KernelScale'},...
-                     'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
-                     'expected-improvement-plus'));
+                     'HyperparameterOptimizationOptions', optOptions);
 
 % Obtain Cross-Validation Error
 cvObj = crossval(svmObj);
