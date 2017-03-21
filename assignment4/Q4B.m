@@ -55,16 +55,17 @@ optOptions = struct('AcquisitionFunctionName','expected-improvement-plus','Kfold
                     'ShowPlots', showPlots, 'Verbose', logLevel);
                 
 % Finding best k-Dimension PCA implementation
+fprintf('completed iteration:\n');
 parfor k = 1:1:d
     % Reduce Dimension
     XBar = X*coeffs(:,1:k);
     RBar = R*coeffs(:,1:k);
 
     % Optimise SVM parameters               
-    svmObj = fitcsvm(X,y,'Standardize',standardize,'CacheSize', 'maximal',...
-                         'KernelFunction','rbf',...
-                         'OptimizeHyperparameters', 'auto',...
-                         'HyperparameterOptimizationOptions', optOptions);
+    svmObj = fitcsvm(XBar,y,'Standardize',standardize,'CacheSize', 'maximal',...
+                            'KernelFunction','rbf',...
+                            'OptimizeHyperparameters', 'auto',...
+                            'HyperparameterOptimizationOptions', optOptions);
     
     kernelScales(k) = svmObj.ModelParameters.KernelScale;
     boxConstraints(k) = svmObj.ModelParameters.BoxConstraint;
@@ -84,4 +85,6 @@ parfor k = 1:1:d
     % Obtain (true) Test Error
     labels = predict(svmObj,RBar);
     trueTestErrs(k) = sum(labels.*s<0)/m;
+    
+    fprintf('%d',k);
 end
