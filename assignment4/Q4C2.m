@@ -77,7 +77,7 @@ plot(X((y==1),1), X((y==1),2), 'o', 'MarkerSize', 6, 'LineWidth', 1.2);
 plot(X(svmObj.IsSupportVector,1),X(svmObj.IsSupportVector,2),'ko','MarkerSize',7,'LineWidth', 2)
 contour(x1Grid,x2Grid, reshape(scores(:,2), size(x1Grid)), [0,0], 'LineWidth', 2);
 
-title('Handwritten Digit Classification: 2-D Feature Vectors','FontSize',46);
+title('Handwritten Digit Classification: 2-Dimensional Feature Vectors','FontSize',46);
 xlabel('x_{1} (Intensity)','FontSize',36);
 ylabel('x_{2} (Symmetry)','FontSize',36);
 legend('Digit 1', 'Other Digits', 'Support Vectors', 'Decision Boundary');

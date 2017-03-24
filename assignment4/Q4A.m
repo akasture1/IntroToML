@@ -44,7 +44,7 @@ fprintf('Perceptron Test Error: %3.6f\n', percepTestErr);
 
 %% Method 1: Manually Tuning KernelScale (gamma) parameter
 gammas = 10.^(-5:5);
-%gammas = 1:1:100;
+%gammas = 10.^(-5:0.1:-2);
 
 cvErrs = zeros(length(gammas),1);
 estTestErrs = zeros(length(gammas),1);
@@ -75,8 +75,8 @@ semilogx(gammas,cvErrs,'Linewidth', 2);
 hold on
 semilogx(gammas,trueTestErrs,'Linewidth', 2);
 
-title('Cross-Validation Error vs True Test Error for different KernelScale values','FontSize',46);
-xlabel('KernelScale','FontSize',36);
+title('Cross-Validation Error and Test Error vs Gamma','FontSize',46);
+xlabel('Gamma','FontSize',36);
 ylabel('Error','FontSize',36);
 legend('Cross-Validation Error','True Test Error');
 grid on
@@ -103,7 +103,7 @@ fprintf('Standardization: %d\n\n',standardize);
 [cvErrsMin, cvErrsMinIndex] = min(cvErrs);
 fprintf('-------------------METHOD #1-------------------\n');
 fprintf('Min Cross-Validation Error: %3.6f\n',cvErrsMin);
-fprintf('Best KernelScale: %3.6f\n',gammas(cvErrsMinIndex));
+fprintf('Best Gamma: %3.6f\n',gammas(cvErrsMinIndex));
 fprintf('True Test-Error: %3.6f\n',trueTestErrs(cvErrsMinIndex));
 
 %% Method 2: Use OptimizeHyperparameters option to select best KernelScale value

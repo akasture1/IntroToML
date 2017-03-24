@@ -1,0 +1,6 @@
+Q4B
+Standardization: 1
+
+Best Cross-Validation Error: 0.002357 --> Dimension: 14 --> Test Error: 0.027473
+Best Test Error: 0.024725 --> Dimension: 22
+diary off
