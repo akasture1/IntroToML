@@ -6,7 +6,7 @@ clc
 clear
 close all
 
-rng(1)
+rng(100)
 standardize = true;
 showPlots = true;
 logLevel = 1;

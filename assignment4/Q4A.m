@@ -43,8 +43,8 @@ percepTestErr = sum(errChecks < 0)/m;
 fprintf('Perceptron Test Error: %3.6f\n', percepTestErr);
 
 %% Method 1: Manually Tuning KernelScale (gamma) parameter
-gammas = 10.^(-5:5);
-%gammas = 10.^(-5:0.1:-2);
+%gammas = 10.^(-5:5);
+gammas = 10.^(-5:0.1:-2);
 
 cvErrs = zeros(length(gammas),1);
 estTestErrs = zeros(length(gammas),1);
